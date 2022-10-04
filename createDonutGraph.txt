@@ -1,0 +1,98 @@
+Option Explicit
+
+Public Enum GC
+
+   itemRow = 3
+   colorRow = 3
+   startRow = 4
+   endRow = 5
+   
+   グラフ開始Row = 2
+   グラフCol = 10
+   
+   ラベルCol = 2
+   startCol = 3
+   endCol = 8
+      
+End Enum
+
+
+Sub main()
+   
+   Call createDonutGraph(ActiveSheet)
+
+End Sub
+
+
+Sub createDonutGraph(ByRef ws As Worksheet)
+
+   Dim i As Long, j As Long, k As Long
+   Dim lngValue As Long
+   
+   Dim objGraphTemplate As ChartObject
+   Dim objGraph As ChartObject
+   Dim objPoint As Point
+   
+   Dim gTop As Long, gHeight As Long
+   Dim index As Long
+   
+   '初期化
+   With ws
+      
+      Set objGraphTemplate = .ChartObjects("DonutGraphTemplate")
+      gHeight = objGraphTemplate.BottomRightCell.Row - objGraphTemplate.TopLeftCell.Row
+      
+      .Range(.Cells(GC.グラフ開始Row, GC.グラフCol), .Cells(.Rows.Count, GC.グラフCol)).ClearContents
+         
+      For Each objGraph In .ChartObjects
+         
+         If objGraph.Name <> objGraphTemplate.Name Then
+            objGraph.Delete
+         End If
+         
+      Next objGraph
+   
+   End With
+   
+      
+   'グラフ作成
+   With ws
+         
+      gTop = GC.グラフ開始Row
+      
+      For i = GC.startRow To GC.endRow
+         
+         .Cells(gTop, GC.グラフCol) = .Cells(i, GC.ラベルCol)
+         
+         objGraphTemplate.Copy
+         .Cells(gTop + 1, GC.グラフCol).Select
+         ws.Paste
+         
+         Set objGraph = ActiveChart.Parent
+         objGraph.Name = "copy"
+         
+         '着色
+         index = 1
+         For j = GC.startCol To GC.endCol
+'         For j = GC.endCol To GC.startCol Step -1
+            
+            lngValue = .Cells(i, j)
+            
+            For k = 1 To lngValue
+               
+               Set objPoint = objGraph.Chart.SeriesCollection(1).Points(index)
+               objPoint.Format.Fill.ForeColor.RGB = .Cells(GC.colorRow, j).Interior.Color
+               
+               index = index + 1
+               
+            Next k
+            
+         Next j
+         
+         gTop = gTop + gHeight + 1
+               
+      Next i
+      
+   End With
+   
+End Sub
